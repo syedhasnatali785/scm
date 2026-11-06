@@ -111,3 +111,4 @@ class SupabaseOrganizationRepository implements IOrganizationRepository {
     }
   }
 }
+

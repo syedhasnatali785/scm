@@ -1,15 +1,12 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/models/product_item.dart';
 import '../../data/repositories/shipment_repository.dart';
 
-enum SyncStatus {
-  synced,
-  syncing,
-  error,
-  offline,
-}
+enum SyncStatus { synced, syncing, error, offline }
 
 @immutable
 class ShipmentState {
@@ -69,16 +66,21 @@ class ShipmentViewModel extends StateNotifier<ShipmentState> {
 
       // Listen to real-time changes
       _itemsSub?.cancel();
-      _itemsSub = _repository.streamShipmentItems(state.activeShipmentId).listen(
-        (updatedItems) {
-          if (mounted) {
-            state = state.copyWith(items: updatedItems, syncStatus: SyncStatus.synced);
-          }
-        },
-        onError: (err) {
-          debugPrint('Shipment items stream error: $err');
-        },
-      );
+      _itemsSub = _repository
+          .streamShipmentItems(state.activeShipmentId)
+          .listen(
+            (updatedItems) {
+              if (mounted) {
+                state = state.copyWith(
+                  items: updatedItems,
+                  syncStatus: SyncStatus.synced,
+                );
+              }
+            },
+            onError: (err) {
+              debugPrint('Shipment items stream error: $err');
+            },
+          );
     } catch (e) {
       state = state.copyWith(
         syncStatus: SyncStatus.offline,
@@ -157,6 +159,6 @@ final shipmentRepositoryProvider = Provider<IShipmentRepository>((ref) {
 // Primary Shipment ViewModel Provider
 final shipmentViewModelProvider =
     StateNotifierProvider<ShipmentViewModel, ShipmentState>((ref) {
-  final repo = ref.watch(shipmentRepositoryProvider);
-  return ShipmentViewModel(repo);
-});
+      final repo = ref.watch(shipmentRepositoryProvider);
+      return ShipmentViewModel(repo);
+    });

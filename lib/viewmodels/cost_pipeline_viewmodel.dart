@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/models/cost_node.dart';
 import '../../engine/calculation_engine.dart';
 
@@ -26,12 +27,12 @@ class CostPipelineState {
 
 class CostPipelineViewModel extends StateNotifier<CostPipelineState> {
   CostPipelineViewModel()
-      : super(
-          CostPipelineState(
-            nodes: CostNode.defaultPipeline(),
-            apportionmentMode: ApportionmentMode.targetCapacity,
-          ),
-        );
+    : super(
+        CostPipelineState(
+          nodes: CostNode.defaultPipeline(),
+          apportionmentMode: ApportionmentMode.targetCapacity,
+        ),
+      );
 
   void addNode(CostNode node) {
     state = state.copyWith(nodes: [...state.nodes, node]);
@@ -68,5 +69,5 @@ class CostPipelineViewModel extends StateNotifier<CostPipelineState> {
 
 final costPipelineViewModelProvider =
     StateNotifierProvider<CostPipelineViewModel, CostPipelineState>((ref) {
-  return CostPipelineViewModel();
-});
+      return CostPipelineViewModel();
+    });

@@ -44,3 +44,4 @@ class SupabaseStorageRepository implements IStorageRepository {
     return 'data:image/jpeg;base64,$base64Str';
   }
 }
+

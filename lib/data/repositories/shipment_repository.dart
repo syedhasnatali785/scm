@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../../core/models/container_spec.dart';
 import '../../core/models/duty_and_assembly.dart';
 import '../../core/models/product_item.dart';
@@ -11,7 +13,11 @@ abstract class IShipmentRepository {
   Future<Shipment?> getShipmentById(String id);
   Future<Shipment> saveShipment(Shipment shipment);
   Future<List<ProductItem>> getShipmentItems(String shipmentId);
-  Future<void> saveShipmentItems(String shipmentId, String orgId, List<ProductItem> items);
+  Future<void> saveShipmentItems(
+    String shipmentId,
+    String orgId,
+    List<ProductItem> items,
+  );
   Future<void> upsertItem(String shipmentId, String orgId, ProductItem item);
   Future<void> deleteItem(String itemId);
   Stream<List<ProductItem>> streamShipmentItems(String shipmentId);
@@ -21,7 +27,8 @@ class SupabaseShipmentRepository implements IShipmentRepository {
   // In-memory fallback cache when running offline or in demo mode
   final Map<String, Shipment> _cachedShipments = {};
   final Map<String, List<ProductItem>> _cachedItems = {};
-  final _itemsStreamController = StreamController<List<ProductItem>>.broadcast();
+  final _itemsStreamController =
+      StreamController<List<ProductItem>>.broadcast();
 
   bool get _canUseSupabase =>
       SupabaseConfig.isInitialized && !SupabaseConfig.isMockMode;
@@ -95,7 +102,9 @@ class SupabaseShipmentRepository implements IShipmentRepository {
             .eq('shipment_id', shipmentId)
             .order('created_at', ascending: true);
         final items = (res as List)
-            .map((e) => ProductItem.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => ProductItem.fromMap(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
         _cachedItems[shipmentId] = items;
         return items;
@@ -117,7 +126,9 @@ class SupabaseShipmentRepository implements IShipmentRepository {
 
     if (_canUseSupabase) {
       try {
-        final records = items.map((i) => i.toMap(shipmentId: shipmentId, orgId: orgId)).toList();
+        final records = items
+            .map((i) => i.toMap(shipmentId: shipmentId, orgId: orgId))
+            .toList();
         await SupabaseConfig.client.from('shipment_items').upsert(records);
       } catch (e) {
         debugPrint('Supabase saveShipmentItems error: $e');
@@ -126,7 +137,11 @@ class SupabaseShipmentRepository implements IShipmentRepository {
   }
 
   @override
-  Future<void> upsertItem(String shipmentId, String orgId, ProductItem item) async {
+  Future<void> upsertItem(
+    String shipmentId,
+    String orgId,
+    ProductItem item,
+  ) async {
     final list = _cachedItems[shipmentId] ?? [];
     final idx = list.indexWhere((i) => i.id == item.id);
     if (idx >= 0) {
@@ -150,13 +165,18 @@ class SupabaseShipmentRepository implements IShipmentRepository {
   @override
   Future<void> deleteItem(String itemId) async {
     for (final key in _cachedItems.keys) {
-      _cachedItems[key] = _cachedItems[key]!.where((i) => i.id != itemId).toList();
+      _cachedItems[key] = _cachedItems[key]!
+          .where((i) => i.id != itemId)
+          .toList();
       _itemsStreamController.add(_cachedItems[key]!);
     }
 
     if (_canUseSupabase) {
       try {
-        await SupabaseConfig.client.from('shipment_items').delete().eq('id', itemId);
+        await SupabaseConfig.client
+            .from('shipment_items')
+            .delete()
+            .eq('id', itemId);
       } catch (e) {
         debugPrint('Supabase deleteItem error: $e');
       }
@@ -173,7 +193,9 @@ class SupabaseShipmentRepository implements IShipmentRepository {
             .eq('shipment_id', shipmentId)
             .map((data) => data.map((e) => ProductItem.fromMap(e)).toList());
       } catch (e) {
-        debugPrint('Supabase realtime stream error, using broadcast stream: $e');
+        debugPrint(
+          'Supabase realtime stream error, using broadcast stream: $e',
+        );
       }
     }
     return _itemsStreamController.stream;

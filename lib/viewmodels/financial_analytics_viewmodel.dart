@@ -66,3 +66,4 @@ final financialAnalyticsViewModelProvider =
     StateNotifierProvider<FinancialAnalyticsViewModel, FinancialSensitivityState>((ref) {
   return FinancialAnalyticsViewModel();
 });
+
