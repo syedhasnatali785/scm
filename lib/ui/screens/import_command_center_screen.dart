@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../state/navigation_state.dart';
 import '../views/audit_grid_view.dart';
 import '../views/container_cms_view.dart';
@@ -19,10 +20,12 @@ class ImportCommandCenterScreen extends ConsumerStatefulWidget {
   const ImportCommandCenterScreen({super.key});
 
   @override
-  ConsumerState<ImportCommandCenterScreen> createState() => _ImportCommandCenterScreenState();
+  ConsumerState<ImportCommandCenterScreen> createState() =>
+      _ImportCommandCenterScreenState();
 }
 
-class _ImportCommandCenterScreenState extends ConsumerState<ImportCommandCenterScreen> {
+class _ImportCommandCenterScreenState
+    extends ConsumerState<ImportCommandCenterScreen> {
   @override
   Widget build(BuildContext context) {
     final activeTab = ref.watch(activeNavigationTabProvider);
@@ -51,9 +54,7 @@ class _ImportCommandCenterScreenState extends ConsumerState<ImportCommandCenterS
                   ),
 
                   // Dedicated Workspace Views (No clutter, full screen real estate)
-                  Expanded(
-                    child: _buildActiveView(activeTab),
-                  ),
+                  Expanded(child: _buildActiveView(activeTab)),
                 ],
               ),
             ),
@@ -66,9 +67,7 @@ class _ImportCommandCenterScreenState extends ConsumerState<ImportCommandCenterS
   Widget _buildActiveView(CommandNavigationTab tab) {
     switch (tab) {
       case CommandNavigationTab.dashboard:
-        return DashboardView(
-          onOpenFillTheGap: () => _openFillTheGap(context),
-        );
+        return DashboardView(onOpenFillTheGap: () => _openFillTheGap(context));
       case CommandNavigationTab.auditGrid:
         return const AuditGridView();
       case CommandNavigationTab.orderItems:
