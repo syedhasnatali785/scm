@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/cookie_local_storage.dart';
 
 class SupabaseConfig {
   // Live Supabase Project Credentials (syedom-bsp)
@@ -26,15 +27,19 @@ class SupabaseConfig {
         _isInitialized = true;
         return;
       }
+      final host = Uri.parse(supabaseUrl).host.split('.').first;
+      final sessionKey = 'sb-$host-auth-token';
+
       await Supabase.initialize(
         url: supabaseUrl,
         anonKey: supabaseAnonKey,
-        authOptions: const FlutterAuthClientOptions(
+        authOptions: FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
+          localStorage: CookieLocalStorage(persistSessionKey: sessionKey),
         ),
       );
       _isInitialized = true;
-      debugPrint('Supabase client successfully initialized with $supabaseUrl');
+      debugPrint('Supabase client successfully initialized with $supabaseUrl and CookieLocalStorage');
     } catch (e) {
       debugPrint('Supabase initialization fallback to offline/mock: $e');
       _isInitialized = true; // safe fallback

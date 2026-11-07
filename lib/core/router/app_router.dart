@@ -19,8 +19,19 @@ class RouterNotifier extends ChangeNotifier {
     final authState = _ref.read(authProvider);
     final onboardingState = _ref.read(onboardingProvider);
 
+    // 1. If auth state is still loading from cookies/session, stay on current route without flashing
+    if (authState.isLoading) {
+      return null;
+    }
+
     final isAuthenticated = authState.hasValue && authState.value != null;
-    final isOnboarded = onboardingState.isOnboarded;
+    final user = authState.value;
+
+    // 2. Check if user already belongs to an organization
+    final hasOrganization = (user?.activeOrganization != null) ||
+        (user?.organizations.isNotEmpty == true) ||
+        onboardingState.isOnboarded;
+
     final isAuthRoute = state.uri.path == '/auth';
     final isOnboardingRoute = state.uri.path == '/onboarding';
 
@@ -28,11 +39,11 @@ class RouterNotifier extends ChangeNotifier {
       return isAuthRoute ? null : '/auth';
     }
 
-    if (isAuthenticated && !isOnboarded) {
+    if (isAuthenticated && !hasOrganization) {
       return isOnboardingRoute ? null : '/onboarding';
     }
 
-    if (isAuthenticated && isOnboarded && (isAuthRoute || isOnboardingRoute)) {
+    if (isAuthenticated && hasOrganization && (isAuthRoute || isOnboardingRoute)) {
       return '/command-center';
     }
 

@@ -11,6 +11,7 @@ import '../data/repositories/shipment_repository.dart';
 import '../engine/calculation_engine.dart';
 import '../engine/packing/container_packer.dart';
 import '../engine/packing/packed_box.dart';
+import '../features/auth/auth_state.dart';
 import '../viewmodels/shipment_viewmodel.dart';
 
 export '../viewmodels/shipment_viewmodel.dart';
@@ -265,7 +266,14 @@ class ProductItemsNotifier extends StateNotifier<List<ProductItem>> {
 final productItemsProvider =
     StateNotifierProvider<ProductItemsNotifier, List<ProductItem>>((ref) {
       final repo = ref.watch(shipmentRepositoryProvider);
-      return ProductItemsNotifier(repo, ref);
+      final activeOrg = ref.watch(activeOrganizationProvider);
+      final orgId = activeOrg?.id ?? '02337732-6c78-496b-bd95-f10feef8e135';
+      return ProductItemsNotifier(
+        repo,
+        ref,
+        'a0000000-0000-0000-0000-000000000001',
+        orgId,
+      );
     });
 
 /// Reactive Calculation Engine Totals Provider

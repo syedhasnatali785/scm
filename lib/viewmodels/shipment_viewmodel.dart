@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/models/product_item.dart';
 import '../../data/repositories/shipment_repository.dart';
+import '../../features/auth/auth_state.dart';
 
 enum SyncStatus { synced, syncing, error, offline }
 
@@ -50,7 +51,14 @@ class ShipmentViewModel extends StateNotifier<ShipmentState> {
   Timer? _debounceTimer;
   StreamSubscription? _itemsSub;
 
-  ShipmentViewModel(this._repository) : super(const ShipmentState()) {
+  ShipmentViewModel(
+    this._repository, [
+    String activeOrgId = '02337732-6c78-496b-bd95-f10feef8e135',
+    String activeShipmentId = 'a0000000-0000-0000-0000-000000000001',
+  ]) : super(ShipmentState(
+          activeOrgId: activeOrgId,
+          activeShipmentId: activeShipmentId,
+        )) {
     init();
   }
 
@@ -168,5 +176,7 @@ final shipmentRepositoryProvider = Provider<IShipmentRepository>((ref) {
 final shipmentViewModelProvider =
     StateNotifierProvider<ShipmentViewModel, ShipmentState>((ref) {
       final repo = ref.watch(shipmentRepositoryProvider);
-      return ShipmentViewModel(repo);
+      final activeOrg = ref.watch(activeOrganizationProvider);
+      final orgId = activeOrg?.id ?? '02337732-6c78-496b-bd95-f10feef8e135';
+      return ShipmentViewModel(repo, orgId);
     });

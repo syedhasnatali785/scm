@@ -23,14 +23,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  void _next() {
+  Future<void> _next() async {
     if (_currentStep < 2) {
       setState(() => _currentStep++);
     } else {
       // Complete Onboarding
       ref.read(onboardingProvider.notifier).setOrgName(_orgNameCtrl.text.trim());
-      ref.read(onboardingProvider.notifier).completeOnboarding();
-      context.go('/command-center');
+      await ref.read(onboardingProvider.notifier).completeOnboarding();
+      if (mounted) {
+        context.go('/command-center');
+      }
     }
   }
 
