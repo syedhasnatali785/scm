@@ -4,9 +4,13 @@ import 'package:pluto_grid/pluto_grid.dart';
 
 import '../../../core/models/duty_and_assembly.dart';
 import '../../../core/models/product_item.dart';
+import '../../../core/models/calculation_results.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/formula_evaluator.dart';
+import '../../../engine/calculation_engine.dart';
 import '../../../state/shipment_state.dart';
+import '../dialogs/paste_quote_dialog.dart';
+import '../dialogs/product_edit_dialog.dart';
 
 class ParametricAuditGrid extends ConsumerStatefulWidget {
   const ParametricAuditGrid({super.key});
@@ -31,11 +35,11 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
     _columns.addAll([
       // --- FROZEN LEFT COLUMNS ---
       PlutoColumn(
-        title: 'Product / Model SKU',
-        field: 'name_sku',
+        title: 'Product Name',
+        field: 'name',
         type: PlutoColumnType.text(),
         frozen: PlutoColumnFrozen.start,
-        width: 220,
+        width: 190,
         enableEditingMode: true,
         renderer: (rendererContext) {
           final val = rendererContext.cell.value.toString();
@@ -76,55 +80,63 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         },
       ),
 
+      PlutoColumn(
+        title: 'Model SKU',
+        field: 'model_number',
+        type: PlutoColumnType.text(),
+        frozen: PlutoColumnFrozen.start,
+        width: 130,
+        enableEditingMode: true,
+      ),
+
       // --- PACKAGING & DIMENSIONS (3-TIER SYNC) ---
       PlutoColumn(
         title: 'Cartons (Ctn)',
         field: 'ordered_cartons',
         type: PlutoColumnType.text(),
-        width: 120,
+        width: 110,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'Pcs / Ctn',
         field: 'pcs_per_carton',
         type: PlutoColumnType.text(),
-        width: 100,
+        width: 95,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'Total Pieces',
         field: 'total_pieces',
         type: PlutoColumnType.text(),
-        width: 120,
-        enableEditingMode:
-            true, // Allows typing total pieces to back-calculate cartons
+        width: 115,
+        enableEditingMode: true, // Allows typing total pieces to back-calculate cartons
       ),
       PlutoColumn(
         title: 'L (cm)',
         field: 'carton_length',
         type: PlutoColumnType.text(),
-        width: 90,
+        width: 85,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'W (cm)',
         field: 'carton_width',
         type: PlutoColumnType.text(),
-        width: 90,
+        width: 85,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'H (cm)',
         field: 'carton_height',
         type: PlutoColumnType.text(),
-        width: 90,
+        width: 85,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'CBM / Ctn',
         field: 'cbm_per_carton',
         type: PlutoColumnType.text(),
-        width: 110,
+        width: 105,
         enableEditingMode: true, // Manual CBM override
       ),
       PlutoColumn(
@@ -132,13 +144,13 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         field: 'total_line_cbm',
         type: PlutoColumnType.number(format: '#,##0.00'),
         readOnly: true,
-        width: 105,
+        width: 100,
       ),
       PlutoColumn(
         title: 'GW / Ctn (kg)',
         field: 'gw_per_carton',
         type: PlutoColumnType.text(),
-        width: 115,
+        width: 110,
         enableEditingMode: true,
       ),
 
@@ -147,14 +159,14 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         title: 'FOB Price (Origin)',
         field: 'unit_price_origin',
         type: PlutoColumnType.text(),
-        width: 140,
+        width: 135,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'Origin Curr',
         field: 'origin_currency',
         type: PlutoColumnType.select(['RMB', 'USD', 'EUR', 'AED', 'PKR']),
-        width: 110,
+        width: 105,
         enableEditingMode: true,
       ),
 
@@ -163,14 +175,14 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         title: 'Duty Mode',
         field: 'duty_mode',
         type: PlutoColumnType.select(['Flat Rate', 'WeBOC Cascade']),
-        width: 130,
+        width: 125,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'Duty Rate / Tax',
         field: 'duty_rate',
         type: PlutoColumnType.text(),
-        width: 125,
+        width: 120,
         enableEditingMode: true,
       ),
       PlutoColumn(
@@ -180,7 +192,7 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
           'Filer (Normal WHT)',
           'Non-Filer (2x WHT)',
         ]),
-        width: 155,
+        width: 150,
         enableEditingMode: true,
       ),
 
@@ -189,28 +201,28 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         title: 'SKD Assembly',
         field: 'assembly_enabled',
         type: PlutoColumnType.select(['ON', 'OFF']),
-        width: 120,
+        width: 115,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'Local Box (PKR)',
         field: 'local_box',
         type: PlutoColumnType.text(),
-        width: 125,
+        width: 120,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'Labor (PKR)',
         field: 'labor_cost',
         type: PlutoColumnType.text(),
-        width: 115,
+        width: 110,
         enableEditingMode: true,
       ),
       PlutoColumn(
         title: 'Defect %',
         field: 'defect_pct',
         type: PlutoColumnType.text(),
-        width: 95,
+        width: 90,
         enableEditingMode: true,
       ),
 
@@ -221,7 +233,7 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         type: PlutoColumnType.text(),
         frozen: PlutoColumnFrozen.end,
         readOnly: true,
-        width: 160,
+        width: 155,
         renderer: (ctx) {
           return Center(
             child: Text(
@@ -240,7 +252,7 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         field: 'target_markup_pct',
         type: PlutoColumnType.text(),
         frozen: PlutoColumnFrozen.end,
-        width: 130,
+        width: 125,
         enableEditingMode: true,
       ),
       PlutoColumn(
@@ -248,7 +260,7 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         field: 'selling_price',
         type: PlutoColumnType.text(),
         frozen: PlutoColumnFrozen.end,
-        width: 150,
+        width: 145,
         enableEditingMode: true, // Bidirectional: typing selling price reverse calculates margin!
         renderer: (ctx) {
           return Center(
@@ -269,7 +281,7 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
         type: PlutoColumnType.text(),
         frozen: PlutoColumnFrozen.end,
         readOnly: true,
-        width: 150,
+        width: 145,
         renderer: (ctx) {
           final isOwner =
               ref.watch(userRoleProvider) == AppUserRole.ownerExecutive;
@@ -305,90 +317,127 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
           );
         },
       ),
+
+      // --- ROW ACTION COLUMN ---
+      PlutoColumn(
+        title: 'Actions',
+        field: 'actions',
+        type: PlutoColumnType.text(),
+        frozen: PlutoColumnFrozen.end,
+        readOnly: true,
+        enableEditingMode: false,
+        width: 75,
+        renderer: (ctx) {
+          final itemId = ctx.row.cells['item_id']?.value?.toString() ?? '';
+          return Center(
+            child: IconButton(
+              icon: const Icon(
+                Icons.delete_outline,
+                size: 18,
+                color: Color(0xFFEF4444),
+              ),
+              tooltip: 'Delete Product',
+              onPressed: () {
+                if (itemId.isNotEmpty) {
+                  ref.read(productItemsProvider.notifier).removeItem(itemId);
+                }
+              },
+            ),
+          );
+        },
+      ),
     ]);
   }
 
+  PlutoRow _buildRow(ProductItem item, CalculatedShipmentTotals totals) {
+    final lineCalc = totals.lineItemFor(item.id);
+    return PlutoRow(
+      cells: {
+        'item_id': PlutoCell(value: item.id),
+        'name': PlutoCell(value: item.name),
+        'model_number': PlutoCell(value: item.modelNumber),
+        'ordered_cartons': PlutoCell(value: item.orderedCartons.toString()),
+        'pcs_per_carton': PlutoCell(value: item.piecesPerCarton.toString()),
+        'total_pieces': PlutoCell(value: item.totalPieces.toString()),
+        'carton_length': PlutoCell(value: item.cartonLength.toString()),
+        'carton_width': PlutoCell(value: item.cartonWidth.toString()),
+        'carton_height': PlutoCell(value: item.cartonHeight.toString()),
+        'cbm_per_carton': PlutoCell(
+          value: item.cbmPerCarton.toStringAsFixed(3),
+        ),
+        'total_line_cbm': PlutoCell(value: item.totalLineCbm),
+        'gw_per_carton': PlutoCell(value: item.gwPerCartonKg.toString()),
+        'unit_price_origin': PlutoCell(
+          value: item.unitPriceOrigin.toString(),
+        ),
+        'origin_currency': PlutoCell(value: item.originCurrency),
+        'duty_mode': PlutoCell(
+          value: item.dutySpec.mode == DutyMode.flatRate
+              ? 'Flat Rate'
+              : 'WeBOC Cascade',
+        ),
+        'duty_rate': PlutoCell(
+          value: item.dutySpec.mode == DutyMode.flatRate
+              ? item.dutySpec.flatRateAmount.toString()
+              : '${item.dutySpec.customsDutyPct}% CD',
+        ),
+        'is_filer': PlutoCell(
+          value: item.dutySpec.isFiler
+              ? 'Filer (Normal WHT)'
+              : 'Non-Filer (2x WHT)',
+        ),
+        'assembly_enabled': PlutoCell(
+          value: item.assemblySpec.isEnabled ? 'ON' : 'OFF',
+        ),
+        'local_box': PlutoCell(
+          value: item.assemblySpec.localBoxCost.toString(),
+        ),
+        'labor_cost': PlutoCell(
+          value: item.assemblySpec.technicianLaborCost.toString(),
+        ),
+        'defect_pct': PlutoCell(
+          value: item.assemblySpec.defectWastagePct.toString(),
+        ),
+        'unit_landed_cost': PlutoCell(
+          value: lineCalc != null
+              ? Formatters.pkr(lineCalc.unitLandedCost)
+              : '-',
+        ),
+        'target_markup_pct': PlutoCell(
+          value: item.targetMarkupPct.toString(),
+        ),
+        'selling_price': PlutoCell(
+          value: lineCalc != null
+              ? Formatters.pkr(lineCalc.projectedSellingPrice)
+              : '-',
+        ),
+        'net_profit': PlutoCell(
+          value: lineCalc != null
+              ? '+${Formatters.pkr(lineCalc.projectedLineNetProfit)}'
+              : '-',
+        ),
+        'actions': PlutoCell(value: ''),
+      },
+    );
+  }
+
   void _syncRowsFromState(List<ProductItem> items) {
+    final totals = ref.read(calculatedTotalsProvider);
     _rows.clear();
     for (final item in items) {
-      final lineCalc = ref.read(calculatedLineItemProvider(item.id));
-      _rows.add(
-        PlutoRow(
-          cells: {
-            'item_id': PlutoCell(value: item.id),
-            'name_sku': PlutoCell(value: '${item.name} (${item.modelNumber})'),
-            'ordered_cartons': PlutoCell(value: item.orderedCartons.toString()),
-            'pcs_per_carton': PlutoCell(value: item.piecesPerCarton.toString()),
-            'total_pieces': PlutoCell(value: item.totalPieces.toString()),
-            'carton_length': PlutoCell(value: item.cartonLength.toString()),
-            'carton_width': PlutoCell(value: item.cartonWidth.toString()),
-            'carton_height': PlutoCell(value: item.cartonHeight.toString()),
-            'cbm_per_carton': PlutoCell(
-              value: item.cbmPerCarton.toStringAsFixed(3),
-            ),
-            'total_line_cbm': PlutoCell(value: item.totalLineCbm),
-            'gw_per_carton': PlutoCell(value: item.gwPerCartonKg.toString()),
-            'unit_price_origin': PlutoCell(
-              value: item.unitPriceOrigin.toString(),
-            ),
-            'origin_currency': PlutoCell(value: item.originCurrency),
-            'duty_mode': PlutoCell(
-              value: item.dutySpec.mode == DutyMode.flatRate
-                  ? 'Flat Rate'
-                  : 'WeBOC Cascade',
-            ),
-            'duty_rate': PlutoCell(
-              value: item.dutySpec.mode == DutyMode.flatRate
-                  ? item.dutySpec.flatRateAmount.toString()
-                  : '${item.dutySpec.customsDutyPct}% CD',
-            ),
-            'is_filer': PlutoCell(
-              value: item.dutySpec.isFiler
-                  ? 'Filer (Normal WHT)'
-                  : 'Non-Filer (2x WHT)',
-            ),
-            'assembly_enabled': PlutoCell(
-              value: item.assemblySpec.isEnabled ? 'ON' : 'OFF',
-            ),
-            'local_box': PlutoCell(
-              value: item.assemblySpec.localBoxCost.toString(),
-            ),
-            'labor_cost': PlutoCell(
-              value: item.assemblySpec.technicianLaborCost.toString(),
-            ),
-            'defect_pct': PlutoCell(
-              value: item.assemblySpec.defectWastagePct.toString(),
-            ),
-            'unit_landed_cost': PlutoCell(
-              value: lineCalc != null
-                  ? Formatters.pkr(lineCalc.unitLandedCost)
-                  : '-',
-            ),
-            'target_markup_pct': PlutoCell(
-              value: item.targetMarkupPct.toString(),
-            ),
-            'selling_price': PlutoCell(
-              value: lineCalc != null
-                  ? Formatters.pkr(lineCalc.projectedSellingPrice)
-                  : '-',
-            ),
-            'net_profit': PlutoCell(
-              value: lineCalc != null
-                  ? '+${Formatters.pkr(lineCalc.projectedLineNetProfit)}'
-                  : '-',
-            ),
-          },
-        ),
-      );
+      _rows.add(_buildRow(item, totals));
     }
   }
 
   void _onCellChanged(PlutoGridOnChangedEvent event) {
-    final rowIdx = event.rowIdx;
-    final items = ref.read(productItemsProvider);
-    if (rowIdx >= items.length) return;
+    final itemId = event.row.cells['item_id']?.value?.toString();
+    if (itemId == null) return;
 
-    final existing = items[rowIdx];
+    final items = ref.read(productItemsProvider);
+    final idx = items.indexWhere((i) => i.id == itemId);
+    if (idx < 0) return;
+
+    final existing = items[idx];
     final field = event.column.field;
     final dynamic rawValue = event.value;
     final String strValue = rawValue?.toString() ?? '';
@@ -399,8 +448,12 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
     final evaluatedNumber = FormulaEvaluator.tryEvaluate(strValue);
 
     switch (field) {
-      case 'name_sku':
+      case 'name':
         updated = updated.copyWith(name: strValue);
+        break;
+
+      case 'model_number':
+        updated = updated.copyWith(modelNumber: strValue);
         break;
 
       // --- 3-TIER PACKAGING RECIPROCAL SYNC ---
@@ -558,11 +611,165 @@ class _ParametricAuditGridState extends ConsumerState<ParametricAuditGrid> {
     }
 
     ref.read(productItemsProvider.notifier).updateItem(updated);
+
+    // Keep active row cells synchronized immediately
+    event.row.cells['ordered_cartons']?.value = updated.orderedCartons.toString();
+    event.row.cells['pcs_per_carton']?.value = updated.piecesPerCarton.toString();
+    event.row.cells['total_pieces']?.value = updated.totalPieces.toString();
+    event.row.cells['cbm_per_carton']?.value = updated.cbmPerCarton.toStringAsFixed(3);
+    event.row.cells['total_line_cbm']?.value = updated.totalLineCbm;
+    event.row.cells['gw_per_carton']?.value = updated.gwPerCartonKg.toString();
+
+    // Recalculate totals with the updated item
+    final container = ref.read(containerSpecProvider);
+    final costNodes = ref.read(costNodesProvider);
+    final rates = ref.read(currencyRatesProvider);
+    final mode = ref.read(apportionmentModeProvider);
+    final currentItems = ref.read(productItemsProvider);
+
+    final newTotals = CalculationEngine.calculate(
+      items: currentItems,
+      container: container,
+      costNodes: costNodes,
+      currencyRates: rates,
+      apportionmentMode: mode,
+    );
+
+    // Update calculated cells on all rows in PlutoGrid
+    if (_stateManager != null) {
+      for (final r in _stateManager!.rows) {
+        final id = r.cells['item_id']?.value?.toString();
+        if (id != null) {
+          final lineCalc = newTotals.lineItemFor(id);
+          if (lineCalc != null) {
+            r.cells['unit_landed_cost']?.value = Formatters.pkr(lineCalc.unitLandedCost);
+            r.cells['selling_price']?.value = Formatters.pkr(lineCalc.projectedSellingPrice);
+            r.cells['net_profit']?.value = '+${Formatters.pkr(lineCalc.projectedLineNetProfit)}';
+          }
+        }
+      }
+      _stateManager!.notifyListeners();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final items = ref.watch(productItemsProvider);
+
+    // Listen for external item updates (additions, deletions, imports)
+    ref.listen<List<ProductItem>>(productItemsProvider, (prev, next) {
+      if (_stateManager == null) return;
+      final prevIds = prev?.map((i) => i.id).toSet() ?? {};
+      final nextIds = next.map((i) => i.id).toSet();
+      if (prevIds.length != nextIds.length || !prevIds.containsAll(nextIds)) {
+        final totals = ref.read(calculatedTotalsProvider);
+        _stateManager!.removeAllRows();
+        _stateManager!.appendRows(next.map((i) => _buildRow(i, totals)).toList());
+      }
+    });
+
+    if (items.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0F172A),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF1E293B)),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.table_rows_outlined,
+                  size: 48,
+                  color: Color(0xFF38BDF8),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'No Products in Active Shipment',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Add your first product card, paste an unformatted quote from WhatsApp/WeChat, or upload an Excel packing list.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0284C7),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text(
+                      'Add Product',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => const ProductEditDialog(),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF38BDF8),
+                      side: const BorderSide(color: Color(0xFF0284C7)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.paste_rounded, size: 18),
+                    label: const Text(
+                      'Smart Paste / Import',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => const PasteQuoteDialog(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     _syncRowsFromState(items);
 

@@ -59,6 +59,7 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
   Color _boxColor = const Color(0xFF3B82F6);
   String? _photoUrl;
   bool _isUploadingPhoto = false;
+  String? _nameError;
 
   static const List<Color> _palette = [
     Color(0xFF3B82F6), // Blue
@@ -137,7 +138,11 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
 
   void _save() {
     final name = _nameCtrl.text.trim();
-    if (name.isEmpty) return;
+    if (name.isEmpty) {
+      setState(() => _nameError = 'Product name is required');
+      return;
+    }
+    setState(() => _nameError = null);
 
     final length = FormulaEvaluator.tryEvaluate(_lengthCtrl.text) ?? 60.0;
     final width = FormulaEvaluator.tryEvaluate(_widthCtrl.text) ?? 40.0;
@@ -214,9 +219,10 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
       if (bytes.isEmpty) return;
 
       setState(() => _isUploadingPhoto = true);
+      final shipmentState = ref.read(shipmentViewModelProvider);
       final url = await MediaService.uploadProductThumbnail(
-        orgId: 'org_main',
-        shipmentId: 'shipment_current',
+        orgId: shipmentState.activeOrgId,
+        shipmentId: shipmentState.activeShipmentId,
         itemId: widget.initialItem?.id ?? const Uuid().v4(),
         rawBytes: bytes,
       );
@@ -252,7 +258,12 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
                 children: [
                   Expanded(
                     flex: 2,
-                    child: _inputField('Product Name', _nameCtrl, hint: 'e.g. HF Electric Jeep 601'),
+                    child: _inputField(
+                      'Product Name',
+                      _nameCtrl,
+                      hint: 'e.g. HF Electric Jeep 601',
+                      errorText: _nameError,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -574,19 +585,29 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
     );
   }
 
-  Widget _inputField(String label, TextEditingController controller, {String? hint}) {
+  Widget _inputField(
+    String label,
+    TextEditingController controller, {
+    String? hint,
+    String? errorText,
+  }) {
     return TextField(
       controller: controller,
       style: const TextStyle(color: Colors.white, fontSize: 13),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        errorText: errorText,
+        errorStyle: const TextStyle(color: Color(0xFFF87171), fontSize: 11),
         labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
         hintStyle: const TextStyle(color: Color(0xFF475569), fontSize: 12),
         filled: true,
         fillColor: const Color(0xFF1E293B),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
       ),
     );
   }

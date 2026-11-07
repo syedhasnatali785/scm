@@ -195,11 +195,112 @@ class _CostPipelineDialogState extends ConsumerState<CostPipelineDialog> {
           ),
           const SizedBox(width: 12),
           IconButton(
+            icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF38BDF8)),
+            tooltip: 'Edit Node',
+            onPressed: () => _showEditNodeDialog(context, node),
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
+            tooltip: 'Delete Node',
             onPressed: () => ref.read(costNodesProvider.notifier).removeNode(node.id),
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditNodeDialog(BuildContext context, CostNode node) {
+    final nameCtrl = TextEditingController(text: node.name);
+    final amountCtrl = TextEditingController(text: node.amount.toString());
+    String currency = node.currencyCode;
+    ApportionmentRule rule = node.allocationRule;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E293B),
+              title: const Text('Edit Logistics Cost Node', style: TextStyle(color: Colors.white, fontSize: 16)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      labelText: 'Cost Node Name',
+                      labelStyle: TextStyle(color: Color(0xFF94A3B8)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: TextField(
+                          controller: amountCtrl,
+                          style: const TextStyle(color: Colors.white),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: const InputDecoration(
+                            labelText: 'Amount',
+                            labelStyle: TextStyle(color: Color(0xFF94A3B8)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: currency,
+                          dropdownColor: const Color(0xFF1E293B),
+                          style: const TextStyle(color: Colors.white),
+                          items: ['PKR', 'RMB', 'USD', 'AED', 'EUR']
+                              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                              .toList(),
+                          onChanged: (v) => setDialogState(() => currency = v ?? 'PKR'),
+                          decoration: const InputDecoration(labelText: 'Currency'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<ApportionmentRule>(
+                    value: rule,
+                    dropdownColor: const Color(0xFF1E293B),
+                    style: const TextStyle(color: Colors.white),
+                    items: ApportionmentRule.values
+                        .map((r) => DropdownMenuItem(value: r, child: Text(r.label)))
+                        .toList(),
+                    onChanged: (v) => setDialogState(() => rule = v ?? ApportionmentRule.byCbm),
+                    decoration: const InputDecoration(labelText: 'Apportionment Method'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0284C7)),
+                  onPressed: () {
+                    final name = nameCtrl.text.trim();
+                    final amt = double.tryParse(amountCtrl.text) ?? 0.0;
+                    if (name.isNotEmpty && amt > 0) {
+                      ref.read(costNodesProvider.notifier).updateNode(node.copyWith(
+                        name: name,
+                        amount: amt,
+                        currencyCode: currency,
+                        allocationRule: rule,
+                      ));
+                      Navigator.pop(ctx);
+                    }
+                  },
+                  child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

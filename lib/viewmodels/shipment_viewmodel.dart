@@ -18,8 +18,8 @@ class ShipmentState {
   final DateTime? lastSyncedAt;
 
   const ShipmentState({
-    this.activeShipmentId = 'shipment_demo_01',
-    this.activeOrgId = 'org_default_71',
+    this.activeShipmentId = 'a0000000-0000-0000-0000-000000000001',
+    this.activeOrgId = '02337732-6c78-496b-bd95-f10feef8e135',
     this.items = const [],
     this.syncStatus = SyncStatus.synced,
     this.errorMessage,
@@ -134,6 +134,14 @@ class ShipmentViewModel extends StateNotifier<ShipmentState> {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  void setSyncStatus(SyncStatus status, {String? errorMessage}) {
+    state = state.copyWith(
+      syncStatus: status,
+      errorMessage: errorMessage,
+      lastSyncedAt: status == SyncStatus.synced ? DateTime.now() : state.lastSyncedAt,
+    );
   }
 
   void _scheduleAutoSync() {

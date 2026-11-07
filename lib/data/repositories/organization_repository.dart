@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+
 import '../../core/models/organization.dart';
 import '../../core/network/supabase_config.dart';
 
@@ -11,7 +12,7 @@ abstract class IOrganizationRepository {
 
 class SupabaseOrganizationRepository implements IOrganizationRepository {
   Organization _cachedOrg = const Organization(
-    id: 'org_default_71',
+    id: '02337732-6c78-496b-bd95-f10feef8e135',
     name: '71 International Trading',
     slug: '71-international',
     baseCurrency: 'PKR',
@@ -31,7 +32,9 @@ class SupabaseOrganizationRepository implements IOrganizationRepository {
             .select()
             .order('created_at', ascending: true);
         final list = (res as List)
-            .map((e) => Organization.fromMap(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => Organization.fromMap(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
         if (list.isNotEmpty) {
           _cachedOrg = list.first;
@@ -66,7 +69,10 @@ class SupabaseOrganizationRepository implements IOrganizationRepository {
   }
 
   @override
-  Future<Organization> createOrganization(Organization org, {String? userId}) async {
+  Future<Organization> createOrganization(
+    Organization org, {
+    String? userId,
+  }) async {
     _cachedOrg = org;
     if (_canUseSupabase) {
       try {
@@ -111,4 +117,3 @@ class SupabaseOrganizationRepository implements IOrganizationRepository {
     }
   }
 }
-

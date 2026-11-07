@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../core/models/container_spec.dart';
-import '../../core/models/duty_and_assembly.dart';
 import '../../core/models/product_item.dart';
 import '../../core/models/shipment.dart';
 import '../../core/network/supabase_config.dart';
@@ -112,7 +110,7 @@ class SupabaseShipmentRepository implements IShipmentRepository {
         debugPrint('Supabase getShipmentItems error, using fallback: $e');
       }
     }
-    return _cachedItems[shipmentId] ?? _defaultInitialItems();
+    return _cachedItems[shipmentId] ?? const <ProductItem>[];
   }
 
   @override
@@ -126,10 +124,17 @@ class SupabaseShipmentRepository implements IShipmentRepository {
 
     if (_canUseSupabase) {
       try {
-        final records = items
-            .map((i) => i.toMap(shipmentId: shipmentId, orgId: orgId))
-            .toList();
-        await SupabaseConfig.client.from('shipment_items').upsert(records);
+        if (items.isEmpty) {
+          await SupabaseConfig.client
+              .from('shipment_items')
+              .delete()
+              .eq('shipment_id', shipmentId);
+        } else {
+          final records = items
+              .map((i) => i.toMap(shipmentId: shipmentId, orgId: orgId))
+              .toList();
+          await SupabaseConfig.client.from('shipment_items').upsert(records);
+        }
       } catch (e) {
         debugPrint('Supabase saveShipmentItems error: $e');
       }
@@ -199,100 +204,5 @@ class SupabaseShipmentRepository implements IShipmentRepository {
       }
     }
     return _itemsStreamController.stream;
-  }
-
-  static List<ProductItem> _defaultInitialItems() {
-    return [
-      const ProductItem(
-        id: 'sku_1',
-        name: 'HF Electric Ride-on Jeep 601',
-        modelNumber: 'HF-601-RED',
-        supplierName: 'Zhejiang Pinghu Toys Co.',
-        cartonLength: 135.0,
-        cartonWidth: 75.0,
-        cartonHeight: 52.0,
-        dimensionUnit: DimensionUnit.cm,
-        orderedCartons: 50,
-        piecesPerCarton: 1,
-        nwPerCartonKg: 25.0,
-        gwPerCartonKg: 28.5,
-        stackingTier: StackingTier.heavyFloor,
-        orientationConstraint: OrientationConstraint.uprightOnly,
-        unitPriceOrigin: 450.0,
-        originCurrency: 'RMB',
-        dutySpec: DutySpec(
-          mode: DutyMode.flatRate,
-          flatBasis: FlatRateBasis.perKgGross,
-          flatRateAmount: 220.0,
-        ),
-        assemblySpec: AssemblySpec(
-          isEnabled: true,
-          localBoxCost: 400.0,
-          technicianLaborCost: 650.0,
-          localPartsCost: 1500.0,
-          defectWastagePct: 2.0,
-        ),
-        targetMarkupPct: 25.0,
-        boxColor: Color(0xFF3B82F6),
-      ),
-      const ProductItem(
-        id: 'sku_2',
-        name: 'Super Drift 24V Go-Kart',
-        modelNumber: 'GK-24V-BLK',
-        supplierName: 'Guangdong Motion Tech',
-        cartonLength: 110.0,
-        cartonWidth: 62.0,
-        cartonHeight: 38.0,
-        dimensionUnit: DimensionUnit.cm,
-        orderedCartons: 60,
-        piecesPerCarton: 1,
-        nwPerCartonKg: 19.0,
-        gwPerCartonKg: 22.0,
-        stackingTier: StackingTier.mediumMiddle,
-        orientationConstraint: OrientationConstraint.uprightOnly,
-        unitPriceOrigin: 380.0,
-        originCurrency: 'RMB',
-        dutySpec: DutySpec(
-          mode: DutyMode.flatRate,
-          flatBasis: FlatRateBasis.perKgGross,
-          flatRateAmount: 220.0,
-        ),
-        assemblySpec: AssemblySpec(
-          isEnabled: true,
-          localBoxCost: 350.0,
-          technicianLaborCost: 550.0,
-          localPartsCost: 1200.0,
-          defectWastagePct: 1.5,
-        ),
-        targetMarkupPct: 28.0,
-        boxColor: Color(0xFF10B981),
-      ),
-      const ProductItem(
-        id: 'sku_3',
-        name: 'Toddler Balance Bike (4-in-1)',
-        modelNumber: 'BB-4IN1-BLU',
-        supplierName: 'Hebei Kids Cycle Co.',
-        cartonLength: 68.0,
-        cartonWidth: 32.0,
-        cartonHeight: 30.0,
-        dimensionUnit: DimensionUnit.cm,
-        orderedCartons: 80,
-        piecesPerCarton: 2,
-        nwPerCartonKg: 9.0,
-        gwPerCartonKg: 10.5,
-        stackingTier: StackingTier.fragileTop,
-        orientationConstraint: OrientationConstraint.allowAny,
-        unitPriceOrigin: 85.0,
-        originCurrency: 'RMB',
-        dutySpec: DutySpec(
-          mode: DutyMode.flatRate,
-          flatBasis: FlatRateBasis.perKgGross,
-          flatRateAmount: 200.0,
-        ),
-        assemblySpec: AssemblySpec(isEnabled: false),
-        targetMarkupPct: 30.0,
-        boxColor: Color(0xFFF59E0B),
-      ),
-    ];
   }
 }

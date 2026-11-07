@@ -97,6 +97,7 @@ class CalculatedShipmentTotals {
   final int doorwayCollisionsCount;
   final List<String> doorwayCollidingSkus;
   final List<TopUpOption> topUpRecommendations;
+  final List<CalculatedLineItem> lineItems;
 
   const CalculatedShipmentTotals({
     required this.totalCartons,
@@ -126,6 +127,14 @@ class CalculatedShipmentTotals {
     required this.doorwayCollisionsCount,
     this.doorwayCollidingSkus = const [],
     this.topUpRecommendations = const [],
+    this.lineItems = const [],
   });
+
+  CalculatedLineItem? lineItemFor(String itemId) {
+    for (final item in lineItems) {
+      if (item.itemId == itemId) return item;
+    }
+    return null;
+  }
 }
 

@@ -46,6 +46,7 @@ class CalculationEngine {
         overallRoiPct: 0,
         deadFreightCost: 0,
         doorwayCollisionsCount: 0,
+        lineItems: const [],
       );
     }
 
@@ -382,6 +383,7 @@ class CalculationEngine {
       doorwayCollisionsCount: doorwayCollisionsCount,
       doorwayCollidingSkus: doorwayCollidingSkus,
       topUpRecommendations: topUpOptions,
+      lineItems: calculatedItems,
     );
   }
 

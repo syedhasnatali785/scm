@@ -5,13 +5,12 @@ class SupabaseConfig {
   // Live Supabase Project Credentials (syedom-bsp)
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://chldqdflwmhsmvscbxzx.supabase.co',
+    defaultValue: 'https://eujcwszlhxbaeabxxiiu.supabase.co',
   );
 
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNobGRxZGZsd21oc212c2NieHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxODc2ODAsImV4cCI6MjA5NDc2MzY4MH0.FRiWYmJANqV5Shs3XbA3xyR8SQjO7j7VgRKXsKqQDrM',
+    defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV1amN3c3psaHhiYWVhYnh4aWl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwMzg5ODUsImV4cCI6MjEwOTYxNDk4NX0.htAhHoALwUu1jTcPrSmnHdo-Y6NPLLh42Td-XyyvGGM',
   );
 
   static bool _isInitialized = false;
@@ -42,4 +41,3 @@ class SupabaseConfig {
     }
   }
 }
-
