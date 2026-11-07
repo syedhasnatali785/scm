@@ -102,6 +102,67 @@ class _OrderItemsViewState extends ConsumerState<OrderItemsView> {
 
               const Spacer(),
 
+              if (items.isNotEmpty) ...[
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFEF4444),
+                    side: BorderSide(color: const Color(0xFFEF4444).withValues(alpha: 0.6)),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  ),
+                  icon: const Icon(Icons.delete_sweep_rounded, size: 16),
+                  label: const Text('Erase All Data', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: const Color(0xFF0F172A),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: const BorderSide(color: Color(0xFFEF4444)),
+                        ),
+                        title: const Row(
+                          children: [
+                            Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'Erase All Container Products?',
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        content: const SizedBox(
+                          width: 380,
+                          child: Text(
+                            'Are you sure you want to erase all products in this active shipment? This will wipe all loaded items so you can start clean. This cannot be undone.',
+                            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, height: 1.4),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel', style: TextStyle(color: Color(0xFF94A3B8))),
+                          ),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEF4444),
+                              foregroundColor: Colors.white,
+                            ),
+                            icon: const Icon(Icons.delete_forever_rounded, size: 16),
+                            label: const Text('Erase All Data', style: TextStyle(fontWeight: FontWeight.bold)),
+                            onPressed: () {
+                              ref.read(productItemsProvider.notifier).clearAll();
+                              ref.read(shipmentViewModelProvider.notifier).clearAllItems();
+                              Navigator.pop(ctx);
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 8),
+              ],
+
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0284C7),

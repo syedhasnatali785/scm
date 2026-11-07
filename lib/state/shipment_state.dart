@@ -6,7 +6,6 @@ import '../core/models/cost_node.dart';
 import '../core/models/currency.dart';
 import '../core/models/product_item.dart';
 import '../core/models/calculation_results.dart';
-import '../core/network/fx_service.dart';
 import '../data/repositories/shipment_repository.dart';
 import '../engine/calculation_engine.dart';
 import '../engine/packing/container_packer.dart';
@@ -85,16 +84,7 @@ final containerSpecProvider =
 /// Currency Rates Provider
 class CurrencyRatesNotifier extends StateNotifier<Map<String, CurrencyRate>> {
   CurrencyRatesNotifier()
-    : super({for (final c in CurrencyRate.defaultCurrencies()) c.code: c}) {
-    fetchLive();
-  }
-
-  Future<void> fetchLive() async {
-    try {
-      final updated = await FxService.refreshRatesWithBuffer(state);
-      state = updated;
-    } catch (_) {}
-  }
+    : super({for (final c in CurrencyRate.defaultCurrencies()) c.code: c});
 
   void updateRate(String code, double rate) {
     if (state.containsKey(code)) {
@@ -241,6 +231,21 @@ class ProductItemsNotifier extends StateNotifier<List<ProductItem>> {
       _repository.deleteItem(id).catchError((_) {});
     }
     _scheduleSync();
+  }
+
+  void clearAll() {
+    _debounceTimer?.cancel();
+    state = const [];
+    _updateSyncStatus(SyncStatus.syncing);
+    if (_repository != null) {
+      _repository.clearAllItems(_shipmentId).then((_) {
+        _updateSyncStatus(SyncStatus.synced);
+      }).catchError((e) {
+        _updateSyncStatus(SyncStatus.error, errorMessage: e.toString());
+      });
+    } else {
+      _updateSyncStatus(SyncStatus.synced);
+    }
   }
 
   void _scheduleSync() {

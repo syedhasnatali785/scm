@@ -118,6 +118,13 @@ class ShipmentViewModel extends StateNotifier<ShipmentState> {
     _scheduleAutoSync();
   }
 
+  void clearAllItems() {
+    _debounceTimer?.cancel();
+    state = state.copyWith(items: const [], syncStatus: SyncStatus.syncing);
+    _repository.clearAllItems(state.activeShipmentId).catchError((_) {});
+    state = state.copyWith(syncStatus: SyncStatus.synced, lastSyncedAt: DateTime.now());
+  }
+
   void importItems(List<ProductItem> newItems) {
     final updated = [...state.items, ...newItems];
     state = state.copyWith(items: updated, syncStatus: SyncStatus.syncing);

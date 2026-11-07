@@ -19,12 +19,7 @@ class _PasteQuoteDialogState extends ConsumerState<PasteQuoteDialog> {
   int _activeTab = 0; // 0 = Raw Text (WeChat/WhatsApp), 1 = Upload Excel/CSV
   String? _uploadedFileName;
 
-  final TextEditingController _textCtrl = TextEditingController(
-    text: '''HF Electric Jeep 601, HF-601-RED, 135*75*52cm, 50 ctns, 450 RMB, 28.5kg
-Super Drift Go-Kart, GK-24V-BLK, 110x62x38cm, 60 ctns, 380 RMB, 22.0kg
-Toddler Balance Bike, BB-4IN1-BLU, 68*32*30 cm, 80 ctns, 85 RMB, 10.5kg
-Solar Inverter 5kW, INV-5K-PRO, 65*42*38cm, 40 ctns, 1200 RMB, 32.0kg''',
-  );
+  final TextEditingController _textCtrl = TextEditingController(text: '');
 
   List<ProductItem> _parsedPreview = [];
 

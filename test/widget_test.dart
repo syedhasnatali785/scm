@@ -19,7 +19,7 @@ void main() {
     // Verify initial route renders Auth Screen
     expect(find.text('71 INTERNATIONAL'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Sign In'), findsOneWidget);
-    expect(find.text('Zero-OTP Sign Up'), findsOneWidget);
+    expect(find.text('Sign Up'), findsOneWidget);
 
     // Tap Sign In to log into the application
     await tester.tap(find.widgetWithText(ElevatedButton, 'Sign In'));

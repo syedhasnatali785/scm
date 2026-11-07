@@ -18,6 +18,7 @@ abstract class IShipmentRepository {
   );
   Future<void> upsertItem(String shipmentId, String orgId, ProductItem item);
   Future<void> deleteItem(String itemId);
+  Future<void> clearAllItems(String shipmentId);
   Stream<List<ProductItem>> streamShipmentItems(String shipmentId);
 }
 
@@ -184,6 +185,23 @@ class SupabaseShipmentRepository implements IShipmentRepository {
             .eq('id', itemId);
       } catch (e) {
         debugPrint('Supabase deleteItem error: $e');
+      }
+    }
+  }
+
+  @override
+  Future<void> clearAllItems(String shipmentId) async {
+    _cachedItems[shipmentId] = [];
+    _itemsStreamController.add([]);
+
+    if (_canUseSupabase) {
+      try {
+        await SupabaseConfig.client
+            .from('shipment_items')
+            .delete()
+            .eq('shipment_id', shipmentId);
+      } catch (e) {
+        debugPrint('Supabase clearAllItems error: $e');
       }
     }
   }

@@ -200,7 +200,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              'Zero-OTP Sign Up',
+                              'Sign Up',
                               style: TextStyle(
                                 color: _isSignUp
                                     ? Colors.white
