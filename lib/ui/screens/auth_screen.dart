@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../features/auth/auth_state.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -13,10 +14,12 @@ class AuthScreen extends ConsumerStatefulWidget {
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _isSignUp = false;
   final TextEditingController _nameCtrl = TextEditingController();
-  final TextEditingController _emailCtrl =
-      TextEditingController(text: 'owner@71international.com');
-  final TextEditingController _passwordCtrl =
-      TextEditingController(text: 'password123');
+  final TextEditingController _emailCtrl = TextEditingController(
+    text: 'owner@71international.com',
+  );
+  final TextEditingController _passwordCtrl = TextEditingController(
+    text: 'password123',
+  );
   bool _obscurePassword = true;
   bool _rememberMe = true;
 
@@ -34,11 +37,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     if (email.isEmpty || pass.isEmpty) return;
 
     if (_isSignUp) {
-      await ref.read(authProvider.notifier).signUpZeroOtp(
-            email,
-            pass,
-            _nameCtrl.text.trim(),
-          );
+      await ref
+          .read(authProvider.notifier)
+          .signUpZeroOtp(email, pass, _nameCtrl.text.trim());
     } else {
       await ref
           .read(authProvider.notifier)
@@ -135,7 +136,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             ),
                           ),
                           Text(
-                            'Import & Container Engine',
+                            'Supply Chain Management System',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -219,8 +220,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 const SizedBox(height: 14),
                 // Zero-OTP Cookie Persistence Badge
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF10B981).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
@@ -230,12 +233,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.cookie_outlined,
-                          size: 14, color: Color(0xFF34D399)),
+                      Icon(
+                        Icons.cookie_outlined,
+                        size: 14,
+                        color: Color(0xFF34D399),
+                      ),
                       SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Multi-Tenant Persistent Session (30-Day Cookie Cache)',
+                          '',
                           style: TextStyle(
                             color: Color(0xFF34D399),
                             fontSize: 11,
@@ -263,8 +269,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      prefixIcon: const Icon(Icons.person_outline,
-                          size: 18, color: Color(0xFF94A3B8)),
+                      prefixIcon: const Icon(
+                        Icons.person_outline,
+                        size: 18,
+                        color: Color(0xFF94A3B8),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -281,8 +290,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    prefixIcon: const Icon(Icons.email_outlined,
-                        size: 18, color: Color(0xFF94A3B8)),
+                    prefixIcon: const Icon(
+                      Icons.email_outlined,
+                      size: 18,
+                      color: Color(0xFF94A3B8),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -299,8 +311,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    prefixIcon: const Icon(Icons.lock_outline,
-                        size: 18, color: Color(0xFF94A3B8)),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      size: 18,
+                      color: Color(0xFF94A3B8),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -327,7 +342,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         value: _rememberMe,
                         activeColor: const Color(0xFF0284C7),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4)),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                         onChanged: (v) =>
                             setState(() => _rememberMe = v ?? true),
                       ),
@@ -336,7 +352,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     const Expanded(
                       child: Text(
                         'Remember this device with secure cookies',
-                        style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                        style: TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -353,16 +372,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline_rounded,
-                            color: Color(0xFFF87171), size: 18),
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          color: Color(0xFFF87171),
+                          size: 18,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            authState.error
-                                .toString()
-                                .replaceAll('Exception: ', ''),
+                            authState.error.toString().replaceAll(
+                              'Exception: ',
+                              '',
+                            ),
                             style: const TextStyle(
-                                color: Color(0xFFF87171), fontSize: 12),
+                              color: Color(0xFFF87171),
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -389,12 +414,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2),
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
-                            _isSignUp
-                                ? 'Create Company Account'
-                                : 'Sign In to Command Center',
+                            _isSignUp ? 'Create Company Account' : 'Sign In',
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -416,15 +441,22 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       onPressed: () {
                         setState(() {
                           _isSignUp = false;
-                          _emailCtrl.text = 'owner@71international.com';
-                          _passwordCtrl.text = 'password123';
+                          _emailCtrl.text = '';
+                          _passwordCtrl.text = '';
                         });
                       },
-                      icon: const Icon(Icons.shield_outlined,
-                          size: 13, color: Color(0xFF38BDF8)),
-                      label: const Text('Owner Login',
-                          style: TextStyle(
-                              color: Color(0xFF38BDF8), fontSize: 11)),
+                      icon: const Icon(
+                        Icons.shield_outlined,
+                        size: 13,
+                        color: Color(0xFF38BDF8),
+                      ),
+                      label: const Text(
+                        'Owner Login',
+                        style: TextStyle(
+                          color: Color(0xFF38BDF8),
+                          fontSize: 11,
+                        ),
+                      ),
                     ),
                     TextButton.icon(
                       onPressed: () {
@@ -434,11 +466,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           _passwordCtrl.text = 'password123';
                         });
                       },
-                      icon: const Icon(Icons.badge_outlined,
-                          size: 13, color: Color(0xFF94A3B8)),
-                      label: const Text('Operator Login',
-                          style: TextStyle(
-                              color: Color(0xFF94A3B8), fontSize: 11)),
+                      icon: const Icon(
+                        Icons.badge_outlined,
+                        size: 13,
+                        color: Color(0xFF94A3B8),
+                      ),
+                      label: const Text(
+                        'Operator Login',
+                        style: TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 11,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -449,9 +488,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     Expanded(child: Divider(color: Color(0xFF223154))),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text('OR',
-                          style: TextStyle(
-                              color: Color(0xFF64748B), fontSize: 11)),
+                      child: Text(
+                        'OR',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 11,
+                        ),
+                      ),
                     ),
                     Expanded(child: Divider(color: Color(0xFF223154))),
                   ],
@@ -470,10 +513,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    icon: const Icon(Icons.g_mobiledata,
-                        size: 28, color: Color(0xFF38BDF8)),
-                    label: const Text('Continue with Google Workspace',
-                        style: TextStyle(fontSize: 13)),
+                    icon: const Icon(
+                      Icons.g_mobiledata,
+                      size: 28,
+                      color: Color(0xFF38BDF8),
+                    ),
+                    label: const Text(
+                      'Continue with Google Workspace',
+                      style: TextStyle(fontSize: 13),
+                    ),
                     onPressed: isLoading ? null : _loginGoogle,
                   ),
                 ),
