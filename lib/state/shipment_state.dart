@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/models/container_spec.dart';
@@ -177,10 +178,9 @@ class ProductItemsNotifier extends StateNotifier<List<ProductItem>> {
     if (_ref != null) {
       Future.microtask(() {
         try {
-          _ref.read(shipmentViewModelProvider.notifier).setSyncStatus(
-            status,
-            errorMessage: errorMessage,
-          );
+          _ref
+              .read(shipmentViewModelProvider.notifier)
+              .setSyncStatus(status, errorMessage: errorMessage);
         } catch (_) {}
       });
     }
@@ -238,11 +238,14 @@ class ProductItemsNotifier extends StateNotifier<List<ProductItem>> {
     state = const [];
     _updateSyncStatus(SyncStatus.syncing);
     if (_repository != null) {
-      _repository.clearAllItems(_shipmentId).then((_) {
-        _updateSyncStatus(SyncStatus.synced);
-      }).catchError((e) {
-        _updateSyncStatus(SyncStatus.error, errorMessage: e.toString());
-      });
+      _repository
+          .clearAllItems(_shipmentId)
+          .then((_) {
+            _updateSyncStatus(SyncStatus.synced);
+          })
+          .catchError((e) {
+            _updateSyncStatus(SyncStatus.error, errorMessage: e.toString());
+          });
     } else {
       _updateSyncStatus(SyncStatus.synced);
     }

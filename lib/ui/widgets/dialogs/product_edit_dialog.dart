@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +27,8 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
   late TextEditingController _lengthCtrl;
   late TextEditingController _widthCtrl;
   late TextEditingController _heightCtrl;
+  late TextEditingController _singleBoxCbmCtrl;
+  bool _useDirectCbm = false;
   DimensionUnit _unit = DimensionUnit.cm;
 
   late TextEditingController _cartonsCtrl;
@@ -83,6 +86,12 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
     _lengthCtrl = TextEditingController(text: item != null ? item.cartonLength.toString() : '60');
     _widthCtrl = TextEditingController(text: item != null ? item.cartonWidth.toString() : '40');
     _heightCtrl = TextEditingController(text: item != null ? item.cartonHeight.toString() : '40');
+    _useDirectCbm = item?.manualCbmOverride != null && (item!.manualCbmOverride! > 0);
+    _singleBoxCbmCtrl = TextEditingController(
+      text: item?.manualCbmOverride != null && item!.manualCbmOverride! > 0
+          ? item.manualCbmOverride.toString()
+          : (item != null ? item.cbmPerCarton.toStringAsFixed(4) : '0.096'),
+    );
     _unit = item?.dimensionUnit ?? DimensionUnit.cm;
 
     _cartonsCtrl = TextEditingController(text: item != null ? item.orderedCartons.toString() : '50');
@@ -121,6 +130,7 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
     _lengthCtrl.dispose();
     _widthCtrl.dispose();
     _heightCtrl.dispose();
+    _singleBoxCbmCtrl.dispose();
     _cartonsCtrl.dispose();
     _pcsPerCtnCtrl.dispose();
     _nwCtrl.dispose();
@@ -144,9 +154,25 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
     }
     setState(() => _nameError = null);
 
-    final length = FormulaEvaluator.tryEvaluate(_lengthCtrl.text) ?? 60.0;
-    final width = FormulaEvaluator.tryEvaluate(_widthCtrl.text) ?? 40.0;
-    final height = FormulaEvaluator.tryEvaluate(_heightCtrl.text) ?? 40.0;
+    double length;
+    double width;
+    double height;
+    double? manualCbmOverride;
+
+    if (_useDirectCbm) {
+      final directCbm = FormulaEvaluator.tryEvaluate(_singleBoxCbmCtrl.text) ?? 0.096;
+      manualCbmOverride = directCbm > 0 ? directCbm : 0.096;
+      // Synthesize cubic equivalent dimensions in cm so 3D packer and container spec have valid bounds
+      final approxCm = math.pow(manualCbmOverride * 1000000.0, 1.0 / 3.0).toDouble();
+      length = (approxCm * 10).round() / 10;
+      width = (approxCm * 10).round() / 10;
+      height = (approxCm * 10).round() / 10;
+    } else {
+      length = FormulaEvaluator.tryEvaluate(_lengthCtrl.text) ?? 60.0;
+      width = FormulaEvaluator.tryEvaluate(_widthCtrl.text) ?? 40.0;
+      height = FormulaEvaluator.tryEvaluate(_heightCtrl.text) ?? 40.0;
+      manualCbmOverride = null;
+    }
 
     final cartons = (FormulaEvaluator.tryEvaluate(_cartonsCtrl.text) ?? 50.0).round();
     final pcs = (FormulaEvaluator.tryEvaluate(_pcsPerCtnCtrl.text) ?? 1.0).round();
@@ -173,6 +199,7 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
       cartonWidth: width,
       cartonHeight: height,
       dimensionUnit: _unit,
+      manualCbmOverride: manualCbmOverride,
       orderedCartons: cartons,
       piecesPerCarton: pcs,
       nwPerCartonKg: nw,
@@ -277,36 +304,173 @@ class _ProductEditDialogState extends ConsumerState<ProductEditDialog> {
               ),
               const SizedBox(height: 16),
 
-              // 2. Dimensions & Unit
-              const Text('CARTON DIMENSIONS & PACKAGING:', style: TextStyle(color: Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              // 2. Dimensions & Packaging Mode (L*W*H vs Direct Single Box CBM)
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(child: _inputField('Length', _lengthCtrl, hint: 'cm/mm/in')),
-                  const SizedBox(width: 10),
-                  Expanded(child: _inputField('Width', _widthCtrl, hint: 'cm/mm/in')),
-                  const SizedBox(width: 10),
-                  Expanded(child: _inputField('Height', _heightCtrl, hint: 'cm/mm/in')),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: DropdownButtonFormField<DimensionUnit>(
-                      value: _unit,
-                      dropdownColor: const Color(0xFF1E293B),
-                      style: const TextStyle(color: Colors.white),
-                      items: DimensionUnit.values
-                          .map((u) => DropdownMenuItem(value: u, child: Text(u.label)))
-                          .toList(),
-                      onChanged: (v) => setState(() => _unit = v ?? DimensionUnit.cm),
-                      decoration: InputDecoration(
-                        labelText: 'Unit',
-                        filled: true,
-                        fillColor: const Color(0xFF1E293B),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
+                  const Text(
+                    'CARTON DIMENSIONS & PACKAGING:',
+                    style: TextStyle(color: Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF334155)),
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            if (_useDirectCbm) {
+                              setState(() {
+                                _useDirectCbm = false;
+                              });
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: !_useDirectCbm ? const Color(0xFF0284C7) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.straighten_rounded,
+                                  size: 13,
+                                  color: !_useDirectCbm ? Colors.white : const Color(0xFF94A3B8),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Dimensions (L × W × H)',
+                                  style: TextStyle(
+                                    color: !_useDirectCbm ? Colors.white : const Color(0xFF94A3B8),
+                                    fontSize: 11,
+                                    fontWeight: !_useDirectCbm ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            if (!_useDirectCbm) {
+                              final l = FormulaEvaluator.tryEvaluate(_lengthCtrl.text) ?? 60.0;
+                              final w = FormulaEvaluator.tryEvaluate(_widthCtrl.text) ?? 40.0;
+                              final h = FormulaEvaluator.tryEvaluate(_heightCtrl.text) ?? 40.0;
+                              final currentCbm = (_unit.toCm(l) * _unit.toCm(w) * _unit.toCm(h)) / 1000000.0;
+                              _singleBoxCbmCtrl.text = currentCbm.toStringAsFixed(4);
+                              setState(() {
+                                _useDirectCbm = true;
+                              });
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _useDirectCbm ? const Color(0xFF10B981) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.view_in_ar_rounded,
+                                  size: 13,
+                                  color: _useDirectCbm ? Colors.white : const Color(0xFF94A3B8),
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Direct Single Box CBM',
+                                  style: TextStyle(
+                                    color: _useDirectCbm ? Colors.white : const Color(0xFF94A3B8),
+                                    fontSize: 11,
+                                    fontWeight: _useDirectCbm ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+
+              if (!_useDirectCbm) ...[
+                Row(
+                  children: [
+                    Expanded(child: _inputField('Length', _lengthCtrl, hint: 'cm/mm/in')),
+                    const SizedBox(width: 10),
+                    Expanded(child: _inputField('Width', _widthCtrl, hint: 'cm/mm/in')),
+                    const SizedBox(width: 10),
+                    Expanded(child: _inputField('Height', _heightCtrl, hint: 'cm/mm/in')),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: DropdownButtonFormField<DimensionUnit>(
+                        value: _unit,
+                        dropdownColor: const Color(0xFF1E293B),
+                        style: const TextStyle(color: Colors.white),
+                        items: DimensionUnit.values
+                            .map((u) => DropdownMenuItem(value: u, child: Text(u.label)))
+                            .toList(),
+                        onChanged: (v) => setState(() => _unit = v ?? DimensionUnit.cm),
+                        decoration: InputDecoration(
+                          labelText: 'Unit',
+                          filled: true,
+                          fillColor: const Color(0xFF1E293B),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _inputField(
+                        'Single Box CBM (m³ / carton)',
+                        _singleBoxCbmCtrl,
+                        hint: 'e.g. 0.096 or 0.125',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: Container(
+                        height: 48,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.check_circle_outline_rounded, color: Color(0xFF34D399), size: 16),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Direct CBM Override active (bypasses L×W×H)',
+                                style: TextStyle(color: Color(0xFF34D399), fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
 
               // 3. Quantities & Weights (With inline math evaluation hint)
